@@ -1,0 +1,7 @@
+/vendor/
+/storage/
+*.xlsx
+*.xls
+*.csv
+.env
+.DS_Store
