@@ -18,7 +18,11 @@ XAMPP digunakan sebagai server lokal (Web Server & Database).
 2. Jalankan installer (`.exe`) yang sudah didownload.
 3. Klik **Next** hingga selesai (pastikan komponen **Apache** dan **MySQL** tercentang).
 4. Buka aplikasi **XAMPP Control Panel**.
-5. Klik tombol **Start** pada baris **Apache** dan **MySQL** hingga indikatornya berwarna hijau.
+5. Sebelum menjalankan Apache, klik tombol **Config** di baris Apache, lalu pilih **PHP (php.ini)**.
+6. Saat Notepad terbuka, cari (Ctrl+F) teks `;extension=gd` lalu hapus tanda titik koma (`;`) di depannya sehingga menjadi `extension=gd`.
+7. Cari lagi teks `;extension=zip` dan hapus titik komanya menjadi `extension=zip`.
+8. Simpan file (Ctrl+S) dan tutup Notepad.
+9. Klik tombol **Start** pada baris **Apache** dan **MySQL** hingga indikatornya berwarna hijau.
 
 ### 2. Instalasi Git
 Git digunakan untuk mengambil (*clone*) kode aplikasi dari GitHub.
@@ -49,6 +53,7 @@ Composer dibutuhkan untuk mengelola dependensi PHP (seperti library PhpSpreadshe
    ```bash
    composer install
    ```
+   *(Jika terjadi error merah terkait ekstensi, jalankan perintah ini sebagai alternatif: `composer install --ignore-platform-reqs`)*
 
 ### 6. Import Database
 1. Buka web browser (Chrome/Edge/Firefox) dan akses: `http://localhost/phpmyadmin`
@@ -64,7 +69,10 @@ Composer dibutuhkan untuk mengelola dependensi PHP (seperti library PhpSpreadshe
    ```text
    http://localhost/Excel_Automation_System
    ```
-3. Aplikasi Jaspel Automation System sudah siap digunakan!
+3. Anda akan diminta untuk login. Gunakan kredensial bawaan berikut:
+   *   **Username:** admin
+   *   **Password:** admin123
+4. Aplikasi Jaspel Automation System sudah siap digunakan!
 
 ---
 **Tips Memperbarui Aplikasi (Update):**
