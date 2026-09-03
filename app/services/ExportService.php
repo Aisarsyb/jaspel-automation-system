@@ -32,10 +32,10 @@ class ExportService {
                 'ORGANIK RSGM'                  => ['sheet' => 'ORGANIK RSGM', 'label' => 'Organik RSGM']
             ];
 
-            // 1. Raw Input Sheet (IRJA JANUARI)
+            // 1. Raw Input Sheet (IRJA)
             if (!empty($rawRows)) {
                 $rawSheet = $spreadsheet->createSheet();
-                $rawSheet->setTitle('IRJA JANUARI');
+                $rawSheet->setTitle('IRJA');
                 $rawSheet->setShowGridlines(true);
 
                 $headers = ['ADMISSION_DATE', 'NAMA_PASIEN', 'DESKRIPSI_INACBG', 'TOTAL_TARIF', 'RADIOLOGI', 'DPJP'];
