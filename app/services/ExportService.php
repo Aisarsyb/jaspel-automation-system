@@ -90,7 +90,7 @@ class ExportService {
                 $sheet->getColumnDimension('F')->setWidth(17);
 
                 // Sheet title
-                $sheet->setCellValue('A1', 'JASA MEDIS PASIEN BPJS RAWAT JALAN BULAN JANUARI 2026');
+                $sheet->setCellValue('A1', 'JASA MEDIS PASIEN BPJS RAWAT JALAN');
                 $sheet->getStyle('A1')->getFont()->setName('Calibri')->setSize(11)->setBold(true);
 
                 $blueFill = [
@@ -274,8 +274,8 @@ class ExportService {
             $rekapSheet->getColumnDimension('C')->setWidth(22);
             $rekapSheet->getColumnDimension('D')->setWidth(20);
 
-            $rekapSheet->setCellValue('A1', 'Rekap Jasa Pelayanan Instalasi Rawat Jalan ');
-            $rekapSheet->setCellValue('A2', 'Bulan : Januari 2026');
+            $rekapSheet->setCellValue('A1', 'Rekap Jasa Pelayanan Instalasi Rawat Jalan');
+            $rekapSheet->setCellValue('A2', 'Bulan : -');
             $rekapSheet->getStyle('A1:A2')->getFont()->setName('Calibri')->setSize(12);
 
             $rRow = 4;
