@@ -69,10 +69,7 @@ Composer dibutuhkan untuk mengelola dependensi PHP (seperti library PhpSpreadshe
    ```text
    http://localhost/Excel_Automation_System
    ```
-3. Anda akan diminta untuk login. Gunakan kredensial bawaan berikut:
-   *   **Username:** admin
-   *   **Password:** admin123
-4. Aplikasi Jaspel Automation System sudah siap digunakan!
+3. Aplikasi Jaspel Automation System sudah siap digunakan!
 
 ---
 **Tips Memperbarui Aplikasi (Update):**
