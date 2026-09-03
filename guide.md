@@ -3,13 +3,13 @@ Jaspel Automation System (JAS)
 
 Versi: 1.0
 Project: Import Data Jasa Pelayanan (Jaspel)
-Unit: Administrasi / Keuangan RSGM Universitas Jember
+Unit: Administrasi / Keuangan RSGM Universitas Airlangga
 Developer: Muhammad Aisar
 
 1. Project Overview
 Latar Belakang
 
-Proses pengolahan data Jasa Pelayanan (Jaspel) di RSGM Universitas Jember saat ini masih dilakukan secara manual menggunakan Microsoft Excel. Admin menerima file rekap pelayanan dalam format Excel, kemudian melakukan proses perapihan, pengelompokan data berdasarkan departemen dan dokter, menghitung nilai jasa pelayanan, hingga membuat rekapitulasi akhir.
+Proses pengolahan data Jasa Pelayanan (Jaspel) di RSGM Universitas Airlangga saat ini masih dilakukan secara manual menggunakan Microsoft Excel. Admin menerima file rekap pelayanan dalam format Excel, kemudian melakukan proses perapihan, pengelompokan data berdasarkan departemen dan dokter, menghitung nilai jasa pelayanan, hingga membuat rekapitulasi akhir.
 
 Seluruh proses tersebut memerlukan waktu yang cukup lama karena dilakukan secara manual setiap periode. Oleh karena itu, diperlukan sebuah tools yang mampu mengotomatisasi proses transformasi data sehingga pekerjaan administrasi menjadi lebih cepat, lebih akurat, dan lebih efisien.
 

@@ -72,7 +72,7 @@ INSERT INTO `settings` (`setting_key`, `setting_value`) VALUES
 ('MAX_UPLOAD_SIZE', '20'),
 ('ALLOWED_EXTENSION', 'xlsx'),
 ('APP_NAME', 'RSGM Jaspel'),
-('COMPANY', 'RSGM Universitas Jember')
+('COMPANY', 'RSGM Universitas Airlangga')
 ON DUPLICATE KEY UPDATE `setting_key`=`setting_key`;
 
 -- 6. Import History Table

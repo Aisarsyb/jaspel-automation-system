@@ -9,7 +9,7 @@ class Layout {
         Session::requireLogin();
         $username = Session::getUsername() ?? 'admin';
         $appName = defined('APP_NAME') ? APP_NAME : 'RSGM Jaspel';
-        $companyName = defined('COMPANY_NAME') ? COMPANY_NAME : 'RSGM Universitas Jember';
+        $companyName = defined('COMPANY_NAME') ? COMPANY_NAME : 'RSGM Universitas Airlangga';
         
         // Define base url path dynamically
         $baseUrl = '/Excel_Automation_System/';

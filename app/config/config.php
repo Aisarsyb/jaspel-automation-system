@@ -47,7 +47,7 @@ try {
     }
 
     define('APP_NAME', $settings['APP_NAME'] ?? 'RSGM Jaspel');
-    define('COMPANY_NAME', $settings['COMPANY'] ?? 'RSGM Universitas Jember');
+    define('COMPANY_NAME', $settings['COMPANY'] ?? 'RSGM Universitas Airlangga');
     define('JASPEL_PERCENTAGE', (float)($settings['JASPEL_PERCENTAGE'] ?? 20.0));
     define('RKG_DEPT_NAME', 'Radiologi Kedokteran Gigi');
     define('RKG_JASPEL_PERCENTAGE', (float)($settings['RKG_JASPEL_PERCENTAGE'] ?? 15.0));
@@ -57,7 +57,7 @@ try {
 } catch (Exception $e) {
     // Default fallback constants in case DB is not yet initialized or connected
     define('APP_NAME', 'RSGM Jaspel');
-    define('COMPANY_NAME', 'RSGM Universitas Jember');
+    define('COMPANY_NAME', 'RSGM Universitas Airlangga');
     define('JASPEL_PERCENTAGE', 20.0);
     define('RKG_DEPT_NAME', 'Radiologi Kedokteran Gigi');
     define('RKG_JASPEL_PERCENTAGE', 15.0);

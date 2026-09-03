@@ -1,6 +1,6 @@
 # Jaspel Automation System (JAS)
 
-Aplikasi otomasi pengolahan data Jasa Pelayanan (Jaspel) untuk Unit Administrasi / Keuangan RSGM Universitas Jember. Aplikasi ini dibangun untuk mempermudah dan mempercepat proses transformasi data dari file Excel mentah menjadi file rekap Jaspel secara otomatis tanpa proses manual.
+Aplikasi otomasi pengolahan data Jasa Pelayanan (Jaspel) untuk Unit Administrasi / Keuangan RSGM Universitas Airlangga. Aplikasi ini dibangun untuk mempermudah dan mempercepat proses transformasi data dari file Excel mentah menjadi file rekap Jaspel secara otomatis tanpa proses manual.
 
 ## Teknologi
 *   **Backend:** PHP Native
