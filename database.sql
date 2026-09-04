@@ -32,7 +32,7 @@ INSERT INTO `departments` (`id`, `department_name`, `status`) VALUES
 (2, 'Periodonsia', 'active'),
 (3, 'Konservasi', 'active'),
 (4, 'IKGA', 'active'),
-(5, 'Radiologi', 'active'),
+(5, 'Radiologi Kedokteran Gigi', 'active'),
 (6, 'Prostodonsia', 'active'),
 (7, 'IPM', 'active')
 ON DUPLICATE KEY UPDATE `department_name`=`department_name`;
