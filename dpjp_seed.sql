@@ -23,6 +23,11 @@ SET time_zone = "+00:00";
 
 -- --------------------------------------------------------
 
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS `dpjp_aliases`;
+DROP TABLE IF EXISTS `dpjp`;
+DROP TABLE IF EXISTS `departments`;
+
 --
 -- Struktur dari tabel `dpjp`
 --
@@ -354,3 +359,5 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+S E T   F O R E I G N _ K E Y _ C H E C K S   =   1 ;  
+ 
