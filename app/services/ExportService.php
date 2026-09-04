@@ -28,7 +28,6 @@ class ExportService {
                 'IKGA'                          => ['sheet' => 'IKGA', 'label' => 'IKGA'],
                 'IPM'                           => ['sheet' => 'IPM', 'label' => 'IPM'],
                 'Prostodonsia'                  => ['sheet' => 'PROSTODONSIA', 'label' => 'Prostodonsia'],
-                'Radiologi Kedokteran Gigi'     => ['sheet' => 'RADIOLOGI', 'label' => 'RKG'],
                 'ORGANIK RSGM'                  => ['sheet' => 'ORGANIK RSGM', 'label' => 'Organik RSGM']
             ];
 
@@ -69,11 +68,18 @@ class ExportService {
             foreach ($dbDepts as $d) {
                 $deptName = $d['department_name'];
                 $deptId   = (int)$d['id'];
+                
+                $isRkg = (stripos($deptName, 'Radiologi') !== false);
 
-                $cfg = $deptConfig[$deptName] ?? [
-                    'sheet' => strtoupper(substr($deptName, 0, 30)),
-                    'label' => $deptName
-                ];
+                if ($isRkg) {
+                    $cfg = ['sheet' => 'RADIOLOGI', 'label' => 'RKG'];
+                } else {
+                    $cfg = $deptConfig[$deptName] ?? [
+                        'sheet' => strtoupper(substr(trim($deptName), 0, 30)),
+                        'label' => trim($deptName)
+                    ];
+                }
+                
                 $sheetName = $cfg['sheet'];
                 $deptLabel = $cfg['label'];
 
@@ -98,7 +104,7 @@ class ExportService {
                     'startColor' => ['rgb' => 'BDD7EE']
                 ];
 
-                $isRkg = ($sheetName === 'RADIOLOGI');
+                $isRkg = (stripos($deptName, 'Radiologi') !== false);
 
                 if ($isRkg) {
                     // --- RADIOLOGI SPECIAL SHEET ---
@@ -120,6 +126,10 @@ class ExportService {
                     $sheet->getStyle('E6:F6')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
                     $rkgTxs = $groupedData[$deptName] ?? [];
+                    if (empty($rkgTxs) && isset($groupedData['Radiologi Kedokteran Gigi'])) {
+                        $rkgTxs = $groupedData['Radiologi Kedokteran Gigi'];
+                    }
+
                     $curRow = 7;
 
                     if (!empty($rkgTxs)) {
@@ -284,7 +294,7 @@ class ExportService {
             foreach ($dbDepts as $d) {
                 $deptName = $d['department_name'];
                 $deptId   = (int)$d['id'];
-                $isRkg    = ($deptName === 'Radiologi Kedokteran Gigi');
+                $isRkg    = (stripos($deptName, 'Radiologi') !== false);
 
                 $rekapSheet->setCellValue("A{$rRow}", "Departemen      : {$deptName}");
                 $rekapSheet->getStyle("A{$rRow}")->getFont()->setName('Calibri')->setSize(12);
