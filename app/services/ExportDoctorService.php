@@ -224,29 +224,50 @@ class ExportDoctorService {
 
             $percentage = $isRkg ? RKG_JASPEL_PERCENTAGE : JASPEL_PERCENTAGE;
 
-            foreach ($docTxs as $idx => $t) {
-                $sheet->setCellValue("A{$dRow}", $idx + 1);
+            // Separate normal and TLB transactions
+            $normalTxs = array_values(array_filter($docTxs, fn($t) => empty($t['is_tlb'])));
+            $tlbTxs    = array_values(array_filter($docTxs, fn($t) => !empty($t['is_tlb'])));
+            $rowNo = 1;
+
+            // Normal rows first
+            foreach ($normalTxs as $t) {
+                $sheet->setCellValue("A{$dRow}", $rowNo++);
                 $sheet->setCellValue("B{$dRow}", $t['tanggal'] ?? '');
                 $sheet->setCellValue("C{$dRow}", $t['patient_name'] ?? '');
                 $sheet->setCellValue("D{$dRow}", $t['tindakan'] ?? '');
                 $sheet->setCellValue("E{$dRow}", $t['tarif'] ?? 0);
                 $sheet->setCellValue("F{$dRow}", "=" . $percentage . "%*E{$dRow}");
-
                 $sheet->getStyle("A{$dRow}:B{$dRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $sheet->getStyle("E{$dRow}:F{$dRow}")->getNumberFormat()->setFormatCode($currencyFormat);
-                
-                if (!empty($t['is_tlb'])) {
-                    $sheet->getStyle("A{$dRow}:F{$dRow}")->getFill()->applyFromArray($redFill);
-                }
-                
                 $dRow++;
             }
 
-            $dataEnd = $dRow - 1;
+            $normalDataEnd = $dRow - 1;
+
+            // TLB rows below (highlighted red, display only — NOT counted in TOTAL)
+            foreach ($tlbTxs as $t) {
+                $sheet->setCellValue("A{$dRow}", $rowNo++);
+                $sheet->setCellValue("B{$dRow}", $t['tanggal'] ?? '');
+                $sheet->setCellValue("C{$dRow}", $t['patient_name'] ?? '');
+                $sheet->setCellValue("D{$dRow}", $t['tindakan'] ?? '');
+                $sheet->setCellValue("E{$dRow}", $t['tarif'] ?? 0);
+                $sheet->setCellValue("F{$dRow}", "=" . $percentage . "%*E{$dRow}");
+                $sheet->getStyle("A{$dRow}:B{$dRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("E{$dRow}:F{$dRow}")->getNumberFormat()->setFormatCode($currencyFormat);
+                $sheet->getStyle("A{$dRow}:F{$dRow}")->getFill()->applyFromArray($redFill);
+                $dRow++;
+            }
+
             $totRow = $dRow;
             $sheet->setCellValue("D{$totRow}", 'TOTAL ');
-            $sheet->setCellValue("E{$totRow}", "=SUM(E{$dataStart}:E{$dataEnd})");
-            $sheet->setCellValue("F{$totRow}", "=SUM(F{$dataStart}:F{$dataEnd})");
+            // TOTAL only sums non-TLB rows
+            if ($normalDataEnd >= $dataStart) {
+                $sheet->setCellValue("E{$totRow}", "=SUM(E{$dataStart}:E{$normalDataEnd})");
+                $sheet->setCellValue("F{$totRow}", "=SUM(F{$dataStart}:F{$normalDataEnd})");
+            } else {
+                $sheet->setCellValue("E{$totRow}", 0);
+                $sheet->setCellValue("F{$totRow}", 0);
+            }
             $sheet->getStyle("D{$totRow}:F{$totRow}")->getFont()->setBold(true);
             $sheet->getStyle("E{$totRow}:F{$totRow}")->getNumberFormat()->setFormatCode($currencyFormat);
             $sheet->getStyle("D{$totRow}:F{$totRow}")->getFill()->applyFromArray($blueFill);
