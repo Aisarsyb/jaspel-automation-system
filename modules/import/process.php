@@ -242,14 +242,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             Helper::logActivity('Import Excel', "Sukses menyelesaikan rekapitulasi file: {$originalName} (History ID: {$historyId})");
 
+            $previewData = generatePreviewData(); // Generate full preview data for archiving
+
             // Clear session temporary import data
             unset($_SESSION['active_import_rows']);
             unset($_SESSION['active_import_duplicates']);
             unset($_SESSION['active_import_file_name']);
             unset($_SESSION['active_import_temp_name']);
             unset($_SESSION['active_import_file_size_mb']);
-
-            $previewData = generatePreviewData(); // Generate full preview data for archiving
 
             $responseData = [
                 'success'          => true,
@@ -310,6 +310,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode(['success' => false, 'message' => 'Gagal merampungkan file Excel: ' . $e->getMessage()]);
             exit();
         }
+    if ($action === 'export_single_doctor') {
+        $input = json_decode(file_get_contents('php://input'), true);
+        $deptName = $input['dept_name'] ?? '';
+        $docName = $input['doctor_name'] ?? '';
+        $txs = $input['txs'] ?? [];
+        
+        if (empty($txs)) {
+            echo json_encode(['success' => false, 'message' => 'Tidak ada data pasien untuk diexport.']);
+            exit;
+        }
+        
+        $safeName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $docName);
+        $tempFileName = 'Temp_' . time() . '_' . $safeName . '.xlsx';
+        $savePath = STORAGE_DIR . 'exports/' . $tempFileName;
+        
+        // Cleanup old Temp_ files (older than 1 hour) to save space
+        foreach (glob(STORAGE_DIR . 'exports/Temp_*.xlsx') as $tf) {
+            if (is_file($tf) && time() - filemtime($tf) > 3600) {
+                @unlink($tf);
+            }
+        }
+        
+        $success = ExportDoctorService::generateSingleDoctorExcel($txs, $deptName, $docName, $savePath);
+        
+        if ($success) {
+            echo json_encode(['success' => true, 'file' => $tempFileName]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Gagal mengenerate file Excel.']);
+        }
+        exit;
     }
 }
 

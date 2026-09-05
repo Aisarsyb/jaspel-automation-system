@@ -166,4 +166,99 @@ class ExportDoctorService {
             return false;
         }
     }
+    
+    public static function generateSingleDoctorExcel(array $docTxs, string $deptName, string $officialName, string $savePath): bool {
+        try {
+            $currencyFormat = '_-[$Rp-421]* #,##0_-;\-[$Rp-421]* #,##0_-;_-[$Rp-421]* "-"_-;_-@_-';
+            $blueFill = ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'BDD7EE']];
+            $redFill  = ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFC7CE']];
+            $isRkg    = (stripos($deptName, 'Radiologi') !== false);
+
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Jasa Medis');
+            $sheet->setShowGridlines(true);
+
+            $sheet->getColumnDimension('A')->setWidth(9);
+            $sheet->getColumnDimension('B')->setWidth(12);
+            $sheet->getColumnDimension('C')->setWidth(32);
+            $sheet->getColumnDimension('D')->setWidth(35);
+            $sheet->getColumnDimension('E')->setWidth(17);
+            $sheet->getColumnDimension('F')->setWidth(17);
+
+            $sheet->setCellValue('A1', 'JASA MEDIS PASIEN BPJS RAWAT JALAN');
+            $sheet->getStyle('A1')->getFont()->setName('Calibri')->setSize(11)->setBold(true);
+
+            $sheet->setCellValue('A3', 'Nama DPJP ');
+            $sheet->setCellValue('C3', ': ' . strtoupper($officialName));
+            $sheet->setCellValue('A4', 'Departemen');
+            $sheet->setCellValue('C4', ': ' . $deptName);
+
+            $hRow = 6;
+            $sheet->setCellValue("A{$hRow}", 'No');
+            $sheet->setCellValue("B{$hRow}", 'Tanggal');
+            $sheet->setCellValue("C{$hRow}", 'Nama Pasien');
+            $sheet->setCellValue("D{$hRow}", 'Tindakan');
+            $sheet->setCellValue("E{$hRow}", 'Tarif ');
+            $sheet->setCellValue("F{$hRow}", 'Jaspel');
+            $sheet->getStyle("A{$hRow}:F{$hRow}")->getFont()->setName('Calibri')->setBold(true);
+            $sheet->getStyle("A{$hRow}:F{$hRow}")->getFill()->applyFromArray($blueFill);
+            $sheet->getStyle("A{$hRow}:B{$hRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle("E{$hRow}:F{$hRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+
+            $dRow = $hRow + 1;
+            $dataStart = $dRow;
+
+            $percentage = $isRkg ? RKG_JASPEL_PERCENTAGE : JASPEL_PERCENTAGE;
+
+            foreach ($docTxs as $idx => $t) {
+                $sheet->setCellValue("A{$dRow}", $idx + 1);
+                $sheet->setCellValue("B{$dRow}", $t['tanggal'] ?? '');
+                $sheet->setCellValue("C{$dRow}", $t['patient_name'] ?? '');
+                $sheet->setCellValue("D{$dRow}", $t['tindakan'] ?? '');
+                $sheet->setCellValue("E{$dRow}", $t['tarif'] ?? 0);
+                $sheet->setCellValue("F{$dRow}", "=" . $percentage . "%*E{$dRow}");
+
+                $sheet->getStyle("A{$dRow}:B{$dRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("E{$dRow}:F{$dRow}")->getNumberFormat()->setFormatCode($currencyFormat);
+                
+                if (!empty($t['is_tlb'])) {
+                    $sheet->getStyle("A{$dRow}:F{$dRow}")->getFill()->applyFromArray($redFill);
+                }
+                
+                $dRow++;
+            }
+
+            $dataEnd = $dRow - 1;
+            $totRow = $dRow;
+            $sheet->setCellValue("D{$totRow}", 'TOTAL ');
+            $sheet->setCellValue("E{$totRow}", "=SUM(E{$dataStart}:E{$dataEnd})");
+            $sheet->setCellValue("F{$totRow}", "=SUM(F{$dataStart}:F{$dataEnd})");
+            $sheet->getStyle("D{$totRow}:F{$totRow}")->getFont()->setBold(true);
+            $sheet->getStyle("E{$totRow}:F{$totRow}")->getNumberFormat()->setFormatCode($currencyFormat);
+            $sheet->getStyle("D{$totRow}:F{$totRow}")->getFill()->applyFromArray($blueFill);
+
+            $taxRow = $totRow + 1;
+            $sheet->setCellValue("D{$taxRow}", 'PAJAK');
+            $sheet->getStyle("D{$taxRow}:F{$taxRow}")->getFont()->setBold(true);
+            $sheet->getStyle("D{$taxRow}:F{$taxRow}")->getFill()->applyFromArray($blueFill);
+
+            $afterTaxRow = $totRow + 2;
+            $sheet->setCellValue("D{$afterTaxRow}", 'TOTAL (setelah pajak)');
+            $sheet->getStyle("D{$afterTaxRow}:F{$afterTaxRow}")->getFont()->setBold(true);
+            $sheet->getStyle("D{$afterTaxRow}:F{$afterTaxRow}")->getFill()->applyFromArray($blueFill);
+
+            $writer = new Xlsx($spreadsheet);
+            $writer->setPreCalculateFormulas(false);
+            
+            $dir = dirname($savePath);
+            if (!is_dir($dir)) mkdir($dir, 0777, true);
+            
+            $writer->save($savePath);
+            return true;
+        } catch (Exception $e) {
+            Helper::logSystemError("Single Doctor Excel failed: " . $e->getMessage(), $e->getTraceAsString());
+            return false;
+        }
+    }
 }

@@ -636,8 +636,13 @@ Layout::start('Import & Processing Engine', 'import');
         return (str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
     }
 
+    let activeDocModalDept = '';
+    let activeDocModalDoc = '';
+
     window.openDoctorDetail = function(deptName, doctorName) {
         if (!activePreviewData || !activePreviewData.grouped[deptName]) return;
+        activeDocModalDept = deptName;
+        activeDocModalDoc = doctorName;
         const txs = activePreviewData.grouped[deptName].filter(t => t.doctor_name === doctorName);
 
         document.getElementById('doc-detail-modal-title').innerText = doctorName;
@@ -669,6 +674,35 @@ Layout::start('Import & Processing Engine', 'import');
         }
 
         Modal.open('doc-detail-modal');
+    };
+
+    window.exportDoctorExcel = async function() {
+        if (!activeDocModalDept || !activeDocModalDoc || !activePreviewData) return;
+        const txs = activePreviewData.grouped[activeDocModalDept].filter(t => t.doctor_name === activeDocModalDoc);
+        
+        showLoading('Meng-generate Excel khusus DPJP ini...');
+        try {
+            const res = await fetch('process.php?action=export_single_doctor', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    dept_name: activeDocModalDept,
+                    doctor_name: activeDocModalDoc,
+                    txs: txs
+                })
+            }).then(r => r.json());
+            
+            hideLoading();
+            if (res.success) {
+                window.location.href = `export.php?file=${encodeURIComponent(res.file)}&format=temp_excel`;
+            } else {
+                Toast.error(res.message || 'Gagal export Excel');
+            }
+        } catch (e) {
+            hideLoading();
+            console.error(e);
+            Toast.error('Terjadi kesalahan jaringan saat export Excel');
+        }
     };
 
     window.saveInlineCorrection = async function(rowNum, btn) {
@@ -1157,7 +1191,12 @@ Layout::start('Import & Processing Engine', 'import');
                 <h3 class="modal-title" id="doc-detail-modal-title" style="margin:0; font-size:16px;"></h3>
                 <p style="font-size:13px; color:var(--text-secondary); margin:4px 0 0;"><strong>Departemen:</strong> <span id="doc-detail-modal-dept"></span></p>
             </div>
-            <button class="modal-close" onclick="Modal.close('doc-detail-modal')" style="flex-shrink:0;">&times;</button>
+            <div style="display:flex; align-items:flex-start; gap: 12px;">
+                <button class="btn btn-primary" id="btn-export-doc-modal" style="padding: 6px 12px; font-size: 12.5px; display: flex; align-items: center; gap: 6px;" onclick="exportDoctorExcel()">
+                    <span style="font-size: 14px;">📥</span> Export Excel
+                </button>
+                <button class="modal-close" onclick="Modal.close('doc-detail-modal')" style="flex-shrink:0; margin-left: 12px;">&times;</button>
+            </div>
         </div>
         <div class="modal-body" style="padding: 16px; max-height: 65vh; overflow-y: auto;">
             <table class="table-modern" style="width:100%;">

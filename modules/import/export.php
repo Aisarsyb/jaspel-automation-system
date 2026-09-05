@@ -17,7 +17,7 @@ if ($fileName === '') {
 $fileName = basename($fileName);
 
 // Check prefix to ensure it belongs to jaspel outputs
-if (!str_starts_with($fileName, 'REKAP_JASPEL_')) {
+if (!str_starts_with($fileName, 'REKAP_JASPEL_') && !str_starts_with($fileName, 'Temp_')) {
     die("Akses file tidak diizinkan.");
 }
 
@@ -32,6 +32,10 @@ if ($format === 'zip') {
     $filePath = STORAGE_DIR . 'exports/' . $doctorZipName;
     $downloadName = $doctorZipName;
     $contentType = 'application/zip';
+} elseif ($format === 'temp_excel') {
+    $filePath = STORAGE_DIR . 'exports/' . $fileName;
+    $downloadName = $fileName;
+    $contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 } else {
     $filePath = STORAGE_DIR . 'exports/' . $fileName;
     $downloadName = $fileName;
