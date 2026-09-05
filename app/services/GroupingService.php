@@ -186,11 +186,9 @@ class GroupingService {
                 $totalTarif = (float)$rowData['tarif'];
                 $isTlb = $rowData['is_tlb'] ?? false;
 
-                if ($isTlb) {
-                    $officialName = $officialName . ' (TLB)';
-                    $totalTarif = -abs($totalTarif);
-                    $radiologi = -abs($radiologi);
-                }
+                // TLB rows keep their original doctor name and positive tarif values.
+                // They are flagged with is_tlb=true for visual highlighting and
+                // intentionally EXCLUDED from jaspel totals below.
 
                 if (abs($radiologi) > 0.0) {
                     // Tarif for doctor's dept = TOTAL_TARIF − RADIOLOGI
@@ -213,18 +211,23 @@ class GroupingService {
                         $groupedData[$deptName] = [];
                     }
                     $groupedData[$deptName][] = $transaction;
-                    $totalJaspel += $jaspel;
+                    // Only add to total if NOT TLB
+                    if (!$isTlb) {
+                        $totalJaspel += $jaspel;
+                    }
 
                     // Add individual RADIOLOGI transaction into RKG dept
                     $rkgJaspel = $calcService->calculateRkg($radiologi);
-                    $rkgTotalJaspel += $rkgJaspel;
-                    $totalJaspel    += $rkgJaspel;
+                    if (!$isTlb) {
+                        $rkgTotalJaspel += $rkgJaspel;
+                        $totalJaspel    += $rkgJaspel;
+                    }
 
                     $rkgTransaction = [
                         'row_number'   => $rowNum,
                         'patient_name' => $rowData['patient_name'],
                         'doctor_id'    => 0,
-                        'doctor_name'  => $isTlb ? $rkgLabel . ' (TLB)' : $rkgLabel,
+                        'doctor_name'  => $rkgLabel,
                         'tarif'        => $radiologi,
                         'jaspel'       => $rkgJaspel,
                         'tindakan'     => $rowData['tindakan'] ?? '',
@@ -240,7 +243,10 @@ class GroupingService {
                 } else {
                     // No radiologi: process normally
                     $jaspel = $calcService->calculate($totalTarif);
-                    $totalJaspel += $jaspel;
+                    // Only add to total if NOT TLB
+                    if (!$isTlb) {
+                        $totalJaspel += $jaspel;
+                    }
 
                     $transaction = [
                         'row_number'   => $rowNum,

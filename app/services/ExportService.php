@@ -197,7 +197,7 @@ class ExportService {
 
                     $deptTxs = $groupedData[$deptName] ?? [];
 
-                    // Group transactions by official doctor name
+                    // Group transactions by official doctor name (TLB and non-TLB share same key)
                     $txsByDoctor = [];
                     foreach ($deptTxs as $t) {
                         $docName = $t['doctor_name'];
@@ -207,16 +207,10 @@ class ExportService {
                         $txsByDoctor[$docName][] = $t;
                     }
 
-                    $deptDoctors = [];
-                    foreach ($dbDocs as $doc) {
-                        $deptDoctors[] = $doc;
-                        if (isset($txsByDoctor[$doc . ' (TLB)'])) {
-                            $deptDoctors[] = $doc . ' (TLB)';
-                        }
-                    }
-
                     $curRow = 3;
-                    foreach ($deptDoctors as $officialName) {
+                    foreach ($dbDocs as $officialName) {
+                        $docTxs = $txsByDoctor[$officialName] ?? [];
+
                         $sheet->setCellValue("A{$curRow}", 'Nama DPJP ');
                         $sheet->setCellValue("C{$curRow}", ': ' . strtoupper($officialName));
                         $sheet->setCellValue("A" . ($curRow + 1), 'Departemen');
@@ -235,26 +229,44 @@ class ExportService {
                         $sheet->getStyle("A{$hRow}:B{$hRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                         $sheet->getStyle("E{$hRow}:F{$hRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
-                        $docTxs = $txsByDoctor[$officialName] ?? [];
                         $dataStart = $hRow + 1;
 
                         if (!empty($docTxs)) {
+                            // Separate normal and TLB transactions
+                            $normalTxs = array_values(array_filter($docTxs, fn($t) => empty($t['is_tlb'])));
+                            $tlbTxs    = array_values(array_filter($docTxs, fn($t) => !empty($t['is_tlb'])));
+
                             $dRow = $dataStart;
-                            foreach ($docTxs as $idx => $t) {
-                                $sheet->setCellValue("A{$dRow}", $idx + 1);
+                            $rowNo = 1;
+
+                            // Normal rows first
+                            foreach ($normalTxs as $t) {
+                                $sheet->setCellValue("A{$dRow}", $rowNo++);
                                 $sheet->setCellValue("B{$dRow}", $t['tanggal'] ?? '');
                                 $sheet->setCellValue("C{$dRow}", $t['patient_name'] ?? '');
                                 $sheet->setCellValue("D{$dRow}", $t['tindakan'] ?? '');
                                 $sheet->setCellValue("E{$dRow}", $t['tarif'] ?? 0);
                                 $sheet->setCellValue("F{$dRow}", "=" . JASPEL_PERCENTAGE . "%*E{$dRow}");
-
                                 $sheet->getStyle("A{$dRow}:B{$dRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                                 $sheet->getStyle("E{$dRow}:F{$dRow}")->getNumberFormat()->setFormatCode($currencyFormat);
-                                
-                                if (!empty($t['is_tlb'])) {
-                                    $sheet->getStyle("A{$dRow}:F{$dRow}")->getFill()->applyFromArray($redFill);
-                                }
-                                
+                                $dRow++;
+                            }
+
+                            // Track end of normal data rows (for TOTAL formula)
+                            $normalDataEnd = $dRow - 1;
+
+                            // TLB rows below (highlighted red, same numbering continues)
+                            $tlbStart = $dRow;
+                            foreach ($tlbTxs as $t) {
+                                $sheet->setCellValue("A{$dRow}", $rowNo++);
+                                $sheet->setCellValue("B{$dRow}", $t['tanggal'] ?? '');
+                                $sheet->setCellValue("C{$dRow}", $t['patient_name'] ?? '');
+                                $sheet->setCellValue("D{$dRow}", $t['tindakan'] ?? '');
+                                $sheet->setCellValue("E{$dRow}", $t['tarif'] ?? 0);
+                                $sheet->setCellValue("F{$dRow}", "=" . JASPEL_PERCENTAGE . "%*E{$dRow}");
+                                $sheet->getStyle("A{$dRow}:B{$dRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                                $sheet->getStyle("E{$dRow}:F{$dRow}")->getNumberFormat()->setFormatCode($currencyFormat);
+                                $sheet->getStyle("A{$dRow}:F{$dRow}")->getFill()->applyFromArray($redFill);
                                 $dRow++;
                             }
                             $dataEnd = $dRow - 1;
@@ -263,15 +275,21 @@ class ExportService {
                             $sheet->setCellValue("E{$dRow}", 0);
                             $sheet->setCellValue("F{$dRow}", "=" . JASPEL_PERCENTAGE . "%*E{$dRow}");
                             $sheet->getStyle("E{$dRow}:F{$dRow}")->getNumberFormat()->setFormatCode($currencyFormat);
+                            $normalDataEnd = $dRow;
                             $dataEnd = $dRow;
                             $dRow++;
                         }
 
-                        // Summary rows
+                        // TOTAL row — sums only non-TLB rows
                         $totRow = $dRow;
+                        if ($normalDataEnd >= $dataStart) {
+                            $sheet->setCellValue("E{$totRow}", "=SUM(E{$dataStart}:E{$normalDataEnd})");
+                            $sheet->setCellValue("F{$totRow}", "=SUM(F{$dataStart}:F{$normalDataEnd})");
+                        } else {
+                            $sheet->setCellValue("E{$totRow}", 0);
+                            $sheet->setCellValue("F{$totRow}", 0);
+                        }
                         $sheet->setCellValue("D{$totRow}", 'TOTAL ');
-                        $sheet->setCellValue("E{$totRow}", "=SUM(E{$dataStart}:E{$dataEnd})");
-                        $sheet->setCellValue("F{$totRow}", "=SUM(F{$dataStart}:F{$dataEnd})");
                         $sheet->getStyle("D{$totRow}:F{$totRow}")->getFont()->setBold(true);
                         $sheet->getStyle("E{$totRow}:F{$totRow}")->getNumberFormat()->setFormatCode($currencyFormat);
                         $sheet->getStyle("D{$totRow}:F{$totRow}")->getFill()->applyFromArray($blueFill);
@@ -287,8 +305,8 @@ class ExportService {
                         $sheet->getStyle("D{$afterTaxRow}:F{$afterTaxRow}")->getFill()->applyFromArray($blueFill);
 
                         $doctorTotalCellMap[$officialName] = [
-                            'sheet' => $sheetName,
-                            'row'   => $totRow,
+                            'sheet'  => $sheetName,
+                            'row'    => $totRow,
                             'is_rkg' => false
                         ];
 
@@ -334,20 +352,11 @@ class ExportService {
 
                 if ($isRkg) {
                     $docList = ['DPJP RKG'];
-                    if (isset($doctorTotalCellMap['DPJP RKG (TLB)'])) {
-                        $docList[] = 'DPJP RKG (TLB)';
-                    }
                 } else {
                     $stmtDocs = $db->prepare("SELECT doctor_name FROM dpjp WHERE department_id = ? ORDER BY id ASC");
                     $stmtDocs->execute([$deptId]);
                     $dbDocs = $stmtDocs->fetchAll(PDO::FETCH_COLUMN);
-                    $docList = [];
-                    foreach ($dbDocs as $doc) {
-                        $docList[] = $doc;
-                        if (isset($doctorTotalCellMap[$doc . ' (TLB)'])) {
-                            $docList[] = $doc . ' (TLB)';
-                        }
-                    }
+                    $docList = $dbDocs; // No TLB variants in rekap
                 }
 
                 $dataStart = $hRow + 1;
@@ -374,11 +383,6 @@ class ExportService {
 
                     $rekapSheet->getStyle("A{$curD}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $rekapSheet->getStyle("C{$curD}:D{$curD}")->getNumberFormat()->setFormatCode($currencyFormat);
-                    
-                    if (strpos($docName, '(TLB)') !== false) {
-                        $rekapSheet->getStyle("A{$curD}:D{$curD}")->getFill()->applyFromArray($redFill);
-                    }
-                    
                     $curD++;
                 }
 

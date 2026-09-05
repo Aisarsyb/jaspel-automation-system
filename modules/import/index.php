@@ -567,16 +567,20 @@ Layout::start('Import & Processing Engine', 'import');
         Object.entries(grouped).forEach(([deptName, txs]) => {
             const isRkg = txs.length === 1 && txs[0].is_rkg_aggregate;
 
-            // Aggregate per doctor within this dept
+            // Aggregate per doctor within this dept (only non-TLB for totals)
             const docMap = {};
             txs.forEach(t => {
                 const key = t.doctor_name || 'DPJP RKG';
                 if (!docMap[key]) {
-                    docMap[key] = { doctor_name: key, tarif: 0, jaspel: 0, patients: 0 };
+                    docMap[key] = { doctor_name: key, tarif: 0, jaspel: 0, patients: 0, hasTlb: false };
                 }
-                docMap[key].tarif  += parseFloat(t.tarif)  || 0;
-                docMap[key].jaspel += parseFloat(t.jaspel) || 0;
-                if (!isRkg) docMap[key].patients++;
+                if (!t.is_tlb) {
+                    docMap[key].tarif  += parseFloat(t.tarif)  || 0;
+                    docMap[key].jaspel += parseFloat(t.jaspel) || 0;
+                    if (!isRkg) docMap[key].patients++;
+                } else {
+                    docMap[key].hasTlb = true;
+                }
             });
 
             const deptTarif  = Object.values(docMap).reduce((s, d) => s + d.tarif,  0);
@@ -606,10 +610,13 @@ Layout::start('Import & Processing Engine', 'import');
                 const clickable = !isRkg
                     ? `style="cursor:pointer; color:var(--primary); font-weight:600; text-decoration:none; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-hover)'; this.style.textDecoration='underline'" onmouseout="this.style.color='var(--primary)'; this.style.textDecoration='none'" onclick="openDoctorDetail('${escapeJsAttr(deptName)}','${escapeJsAttr(doc.doctor_name)}')" title="Klik untuk lihat detail pasien"`
                     : `style="font-weight:600;"`;
+                const tlbBadge = doc.hasTlb
+                    ? ` <span style="background:#ffc7ce;color:#9b1c1c;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:6px;">TLB</span>`
+                    : '';
                 html += `
                             <tr style="transition: background-color 0.15s ease;" onmouseover="this.style.backgroundColor='#f1f5f9'" onmouseout="this.style.backgroundColor='transparent'">
                                 <td style="text-align:center; font-weight:500; color:var(--text-secondary);">${idx + 1}</td>
-                                <td ${clickable}>${escapeHtml(doc.doctor_name)}</td>
+                                <td ${clickable}>${escapeHtml(doc.doctor_name)}${tlbBadge}</td>
                                 <td style="text-align:right; font-weight:500; color:var(--text-secondary);">${formatRupiah(doc.tarif)}</td>
                                 <td style="text-align:right; font-weight:700; color:var(--success);">${formatRupiah(doc.jaspel)}</td>
                             </tr>`;
@@ -654,15 +661,17 @@ Layout::start('Import & Processing Engine', 'import');
         } else {
             let totalTarif = 0, totalJaspel = 0;
             let rows = txs.map((t, idx) => {
-                totalTarif  += parseFloat(t.tarif)  || 0;
-                totalJaspel += parseFloat(t.jaspel) || 0;
-                return `<tr>
+                totalTarif  += t.is_tlb ? 0 : (parseFloat(t.tarif)  || 0);
+                totalJaspel += t.is_tlb ? 0 : (parseFloat(t.jaspel) || 0);
+                const rowStyle = t.is_tlb ? 'background:#ffc7ce;' : '';
+                const tlbTag = t.is_tlb ? ' <span style="font-size:10px;font-weight:700;color:#9b1c1c;">[TLB]</span>' : '';
+                return `<tr style="${rowStyle}">
                     <td style="text-align:center;font-weight:500;">${idx + 1}</td>
                     <td style="text-align:center;">${escapeHtml(t.tanggal || '-')}</td>
-                    <td>${escapeHtml(t.patient_name)}</td>
+                    <td>${escapeHtml(t.patient_name)}${tlbTag}</td>
                     <td>${escapeHtml(t.tindakan || '-')}</td>
                     <td style="text-align:right;font-weight:500;">${formatRupiah(t.tarif)}</td>
-                    <td style="text-align:right;font-weight:700;color:var(--success);">${formatRupiah(t.jaspel)}</td>
+                    <td style="text-align:right;font-weight:700;color:${t.is_tlb ? '#9b1c1c' : 'var(--success)'};">${formatRupiah(t.jaspel)}</td>
                 </tr>`;
             }).join('');
             rows += `<tr style="background:var(--surface-color);font-weight:700;border-top:2px solid var(--border-color);">
