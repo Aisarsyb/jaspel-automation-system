@@ -310,6 +310,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode(['success' => false, 'message' => 'Gagal merampungkan file Excel: ' . $e->getMessage()]);
             exit();
         }
+    } // end generate_final
+
     if ($action === 'export_single_doctor') {
         $input = json_decode(file_get_contents('php://input'), true);
         $deptName = $input['dept_name'] ?? '';
