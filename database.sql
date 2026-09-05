@@ -26,15 +26,11 @@ CREATE TABLE IF NOT EXISTS `departments` (
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Seed default departments from guide.md
+-- Seed default departments (Generic)
 INSERT INTO `departments` (`id`, `department_name`, `status`) VALUES
-(1, 'Bedah Mulut', 'active'),
-(2, 'Periodonsia', 'active'),
-(3, 'Konservasi', 'active'),
-(4, 'IKGA', 'active'),
-(5, 'Radiologi Kedokteran Gigi', 'active'),
-(6, 'Prostodonsia', 'active'),
-(7, 'IPM', 'active')
+(1, 'Poli Umum', 'active'),
+(2, 'Poli Gigi', 'active'),
+(3, 'Instalasi Radiologi', 'active')
 ON DUPLICATE KEY UPDATE `department_name`=`department_name`;
 
 -- 3. DPJP (Doctor) Table
@@ -65,14 +61,14 @@ CREATE TABLE IF NOT EXISTS `settings` (
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Seed default settings
+-- Seed default settings (Generic)
 INSERT INTO `settings` (`setting_key`, `setting_value`) VALUES
 ('JASPEL_PERCENTAGE', '20'),
 ('RKG_JASPEL_PERCENTAGE', '15'),
 ('MAX_UPLOAD_SIZE', '20'),
 ('ALLOWED_EXTENSION', 'xlsx'),
-('APP_NAME', 'RSGM Jaspel'),
-('COMPANY', 'RSGM Universitas Airlangga')
+('APP_NAME', 'Sistem Jaspel'),
+('COMPANY', 'Rumah Sakit Umum')
 ON DUPLICATE KEY UPDATE `setting_key`=`setting_key`;
 
 -- 6. Import History Table
