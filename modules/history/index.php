@@ -140,6 +140,9 @@ Layout::start('Riwayat Import & Audit', 'history');
                 <a href="#" id="det-dl-zip" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">
                     📦 Download ZIP
                 </a>
+                <a href="#" id="det-dl-zip-doctor" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">
+                    📦 Download ZIP per DPJP
+                </a>
             </div>
 
             <!-- Errors table -->
@@ -238,6 +241,7 @@ Layout::start('Riwayat Import & Audit', 'history');
                                 <div style="display: flex; gap: 8px; justify-content: center;">
                                     <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12.5px; border-color: var(--primary); color: var(--primary);" onclick="openDetailModal(${h.id})">Detail</button>
                                     <a href="../import/export.php?file=${encodeURIComponent(h.output_file)}&format=excel" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12.5px;">Unduh</a>
+                                    <a href="../import/index.php?preview_file=${encodeURIComponent(h.output_file)}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12.5px; background: #f1f5f9; color: var(--text-primary);">Pratinjau</a>
                                     <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12.5px;" onclick="openDeleteModal(${h.id}, '${escapeJsString(h.file_name)}')">Hapus</button>
                                 </div>
                             </td>
@@ -269,6 +273,7 @@ Layout::start('Riwayat Import & Audit', 'history');
                 // Setup downloads links
                 document.getElementById('det-dl-excel').href = `../import/export.php?file=${encodeURIComponent(h.output_file)}&format=excel`;
                 document.getElementById('det-dl-zip').href = `../import/export.php?file=${encodeURIComponent(h.output_file)}&format=zip`;
+                document.getElementById('det-dl-zip-doctor').href = `../import/export.php?file=${encodeURIComponent(h.output_file)}&format=doctor_zip`;
 
                 // Render error list
                 const errorBox = document.getElementById('det-errors-box');

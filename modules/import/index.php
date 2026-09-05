@@ -236,6 +236,9 @@ Layout::start('Import & Processing Engine', 'import');
             <a href="#" id="download-zip-btn" class="btn btn-secondary" style="padding: 12px;">
                 📦 Download Laporan ZIP
             </a>
+            <a href="#" id="download-doctor-zip-btn" class="btn btn-secondary" style="padding: 12px;">
+                📦 Download ZIP per DPJP
+            </a>
             <button class="btn btn-secondary" style="padding: 10px;" onclick="resetEngine()">
                 Muat Ulang / Proses File Lain
             </button>
@@ -774,6 +777,11 @@ Layout::start('Import & Processing Engine', 'import');
         document.getElementById('file-input').value = '';
         activeTempName = '';
         activeFileName = '';
+        
+        // Remove preview_file from URL if present
+        if (window.location.search.includes('preview_file=')) {
+            window.history.pushState({}, document.title, window.location.pathname);
+        }
     }
 
     function escapeHtml(text) {
@@ -906,10 +914,61 @@ Layout::start('Import & Processing Engine', 'import');
             zipBtn.style.pointerEvents = 'auto';
             zipBtn.style.opacity = '1';
         }
+        
+        const doctorZipBtn = document.getElementById('download-doctor-zip-btn');
+        if (res.output_doctor_zip && doctorZipBtn) {
+            doctorZipBtn.href = 'export.php?file=' + encodeURIComponent(res.output_file) + '&format=doctor_zip';
+            doctorZipBtn.style.pointerEvents = 'auto';
+            doctorZipBtn.style.opacity = '1';
+        }
     }
 
-    // --- Restore Session on Page Load ---
     window.addEventListener('load', async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const previewFile = urlParams.get('preview_file');
+        
+        if (previewFile) {
+            try {
+                const res = await fetch(`../history/api.php?action=get_preview&file=${encodeURIComponent(previewFile)}`).then(r => r.json());
+                if (res.success && res.data) {
+                    // It returns the responseData of generate_final, we need the preview_data part
+                    const pData = res.data.preview_data;
+                    activePreviewData = pData;
+                    activeTempName = pData.temp_name;
+                    activeFileName = pData.file_name;
+                    document.getElementById('upload-container').style.display = 'none';
+                    
+                    // Show final report success modal instead of interactive preview since it's already finalized!
+                    showSuccessPanel(res.data);
+                    
+                    // Show the interactive workspace (tab 1 rekap) below it for viewing
+                    document.getElementById('p-stat-total').innerText = pData.total_rows;
+                    document.getElementById('p-stat-success').innerText = pData.success_rows;
+                    document.getElementById('p-stat-failed').innerText = pData.failed_rows;
+                    document.getElementById('p-stat-tarif').innerText = pData.formatted_tarif;
+                    document.getElementById('p-stat-jaspel').innerText = `Jaspel: ${pData.formatted_jaspel}`;
+                    
+                    document.getElementById('generate-final-btn').style.display = 'none'; // hide generate
+                    document.getElementById('p-tab-btn-error').style.display = 'none'; // hide error tab
+                    
+                    renderRekapGrouped(pData);
+                    document.getElementById('preview-workspace-container').style.display = 'block';
+                    
+                    const btnRekap = document.getElementById('p-tab-btn-rekap');
+                    btnRekap.style.borderBottom = '3px solid var(--primary)';
+                    btnRekap.style.fontWeight = '600';
+                    btnRekap.style.color = 'var(--primary)';
+                    document.getElementById('p-tab-content-rekap').style.display = 'block';
+                } else {
+                    Toast.error(res.message);
+                }
+            } catch (err) {
+                console.error('Error loading history preview:', err);
+                Toast.error('Gagal memuat pratinjau riwayat.');
+            }
+            return;
+        }
+
         try {
             const res = await fetchAPI('process.php?action=get_active_session');
             if (res.success && res.has_active_session) {

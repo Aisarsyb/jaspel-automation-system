@@ -124,6 +124,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         exit();
     }
+
+    if ($action === 'get_preview') {
+        $file = $_GET['file'] ?? '';
+        if (!$file) {
+            echo json_encode(['success' => false, 'message' => 'File tidak valid']);
+            exit();
+        }
+
+        $fileName = basename($file);
+        $jsonPath = STORAGE_DIR . 'exports/' . str_replace('.xlsx', '.json', $fileName);
+
+        if (!file_exists($jsonPath)) {
+            echo json_encode(['success' => false, 'message' => 'File preview tidak ditemukan di server']);
+            exit();
+        }
+
+        $jsonContent = file_get_contents($jsonPath);
+        echo json_encode([
+            'success' => true,
+            'data' => json_decode($jsonContent, true)
+        ]);
+        exit();
+    }
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -161,11 +184,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $exportPath = STORAGE_DIR . 'exports/' . $outFile;
                 $zipPath = STORAGE_DIR . 'exports/' . str_replace('.xlsx', '.zip', $outFile);
+                $docZipPath = STORAGE_DIR . 'exports/' . str_replace('REKAP_JASPEL_', 'REKAP_JASPEL_PER_DOKTER_', str_replace('.xlsx', '.zip', $outFile));
+                $jsonPath = STORAGE_DIR . 'exports/' . str_replace('.xlsx', '.json', $outFile);
                 $processedPath = STORAGE_DIR . 'imports/processed/' . $outFile;
                 
                 // Delete physical files
                 if (file_exists($exportPath)) @unlink($exportPath);
                 if (file_exists($zipPath)) @unlink($zipPath);
+                if (file_exists($docZipPath)) @unlink($docZipPath);
+                if (file_exists($jsonPath)) @unlink($jsonPath);
                 if (file_exists($processedPath)) @unlink($processedPath);
 
                 // Find input raw file: e.g. INPUT_JASPEL_<TIMESTAMP>_<ORIGNAL_NAME>

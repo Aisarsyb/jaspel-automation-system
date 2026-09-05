@@ -27,6 +27,11 @@ if ($format === 'zip') {
     $filePath = STORAGE_DIR . 'exports/' . $zipName;
     $downloadName = $zipName;
     $contentType = 'application/zip';
+} elseif ($format === 'doctor_zip') {
+    $doctorZipName = str_replace('REKAP_JASPEL_', 'REKAP_JASPEL_PER_DOKTER_', str_replace('.xlsx', '.zip', $fileName));
+    $filePath = STORAGE_DIR . 'exports/' . $doctorZipName;
+    $downloadName = $doctorZipName;
+    $contentType = 'application/zip';
 } else {
     $filePath = STORAGE_DIR . 'exports/' . $fileName;
     $downloadName = $fileName;

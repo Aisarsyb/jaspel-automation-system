@@ -184,8 +184,15 @@ class GroupingService {
 
                 $radiologi = (float)($rowData['radiologi'] ?? 0.0);
                 $totalTarif = (float)$rowData['tarif'];
+                $isTlb = $rowData['is_tlb'] ?? false;
 
-                if ($radiologi > 0.0) {
+                if ($isTlb) {
+                    $officialName = $officialName . ' (TLB)';
+                    $totalTarif = -abs($totalTarif);
+                    $radiologi = -abs($radiologi);
+                }
+
+                if (abs($radiologi) > 0.0) {
                     // Tarif for doctor's dept = TOTAL_TARIF − RADIOLOGI
                     $netTarif = $totalTarif - $radiologi;
                     $jaspel   = $calcService->calculate($netTarif);
@@ -198,7 +205,8 @@ class GroupingService {
                         'tarif'        => $netTarif,
                         'jaspel'       => $jaspel,
                         'tindakan'     => $rowData['tindakan'] ?? '',
-                        'tanggal'      => $rowData['tanggal'] ?? ''
+                        'tanggal'      => $rowData['tanggal'] ?? '',
+                        'is_tlb'       => $isTlb
                     ];
 
                     if (!isset($groupedData[$deptName])) {
@@ -216,11 +224,12 @@ class GroupingService {
                         'row_number'   => $rowNum,
                         'patient_name' => $rowData['patient_name'],
                         'doctor_id'    => 0,
-                        'doctor_name'  => $rkgLabel,
+                        'doctor_name'  => $isTlb ? $rkgLabel . ' (TLB)' : $rkgLabel,
                         'tarif'        => $radiologi,
                         'jaspel'       => $rkgJaspel,
                         'tindakan'     => $rowData['tindakan'] ?? '',
-                        'tanggal'      => $rowData['tanggal'] ?? ''
+                        'tanggal'      => $rowData['tanggal'] ?? '',
+                        'is_tlb'       => $isTlb
                     ];
 
                     if (!isset($groupedData[$rkgDeptName])) {
@@ -241,7 +250,8 @@ class GroupingService {
                         'tarif'        => $totalTarif,
                         'jaspel'       => $jaspel,
                         'tindakan'     => $rowData['tindakan'] ?? '',
-                        'tanggal'      => $rowData['tanggal'] ?? ''
+                        'tanggal'      => $rowData['tanggal'] ?? '',
+                        'is_tlb'       => $isTlb
                     ];
 
                     if (!isset($groupedData[$deptName])) {

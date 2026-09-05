@@ -168,9 +168,10 @@ class ExcelReader {
             $seenRows = [];
 
             for ($row = $headerRow + 1; $row <= $maxRow; $row++) {
-                // Skip rows highlighted in red (ignored/cancelled rows)
+                // Handle rows highlighted in red (TLB)
+                $isTlb = false;
                 if (self::isRedRow($sheet, $row, $colMapping)) {
-                    continue;
+                    $isTlb = true;
                 }
 
                 $patient = trim((string)$sheet->getCell([$colMapping['patient'], $row])->getValue());
@@ -247,6 +248,7 @@ class ExcelReader {
                     'radiologi'    => $radiologi,
                     'tindakan'     => $tindakan,
                     'tanggal'      => $tanggal,
+                    'is_tlb'       => $isTlb,
                     'is_valid'     => true,
                     'errors'       => []
                 ];

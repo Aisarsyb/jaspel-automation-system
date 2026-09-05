@@ -249,12 +249,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             unset($_SESSION['active_import_temp_name']);
             unset($_SESSION['active_import_file_size_mb']);
 
+            $previewData = generatePreviewData(); // Generate full preview data for archiving
+
             $responseData = [
                 'success'          => true,
                 'history_id'       => $historyId,
                 'file_name'        => $originalName,
                 'output_file'      => $outputFileName,
                 'output_zip'       => $outputZipName,
+                'output_doctor_zip'=> 'REKAP_JASPEL_PER_DOKTER_' . $timestamp . '_' . $safeBaseName . '.zip',
                 'total_rows'       => count($rows) + count($duplicates),
                 'success_rows'     => $groupResult['success_count'],
                 'failed_rows'      => $groupResult['failed_count'],
@@ -266,13 +269,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'formatted_jaspel' => Helper::formatRupiah($groupResult['total_jaspel']),
                 'formatted_tarif'  => Helper::formatRupiah(array_sum(array_map(fn($txs) => array_sum(array_column($txs, 'tarif')), $groupResult['grouped']))),
                 'duration'         => $duration,
-                'file_size'        => $fileSizeMb
+                'file_size'        => $fileSizeMb,
+                'preview_data'     => $previewData // Include this so we can save it
             ];
 
             // Send JSON response immediately, then do background tasks
             $jsonOut = json_encode($responseData);
             header('Content-Length: ' . strlen($jsonOut));
             echo $jsonOut;
+            
+            // Save json to file for history preview
+            $jsonPath = STORAGE_DIR . 'exports/' . str_replace('.xlsx', '.json', $outputFileName);
+            file_put_contents($jsonPath, $jsonOut);
 
             // Flush & close connection so browser gets response immediately
             if (function_exists('fastcgi_finish_request')) {
@@ -286,6 +294,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Background tasks: ZIP + copy to processed (user won't wait for this)
             ExportService::compressToZip($exportPath, $exportZipPath);
             copy($exportPath, $processedSavedPath);
+            
+            // Also generate per-doctor zip
+            $doctorZipName = 'REKAP_JASPEL_PER_DOKTER_' . $timestamp . '_' . $safeBaseName . '.zip';
+            $doctorZipPath = STORAGE_DIR . 'exports/' . $doctorZipName;
+            ExportDoctorService::generateZipPerDoctor($groupResult['grouped'], $doctorZipPath);
 
             exit();
 

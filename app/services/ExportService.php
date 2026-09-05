@@ -104,6 +104,11 @@ class ExportService {
                     'startColor' => ['rgb' => 'BDD7EE']
                 ];
 
+                $redFill = [
+                    'fillType'   => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'FFC7CE']
+                ];
+
                 $isRkg = (stripos($deptName, 'Radiologi') !== false);
 
                 if ($isRkg) {
@@ -143,6 +148,11 @@ class ExportService {
 
                             $sheet->getStyle("A{$curRow}:B{$curRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                             $sheet->getStyle("E{$curRow}:F{$curRow}")->getNumberFormat()->setFormatCode($currencyFormat);
+                            
+                            if (!empty($t['is_tlb'])) {
+                                $sheet->getStyle("A{$curRow}:F{$curRow}")->getFill()->applyFromArray($redFill);
+                            }
+                            
                             $curRow++;
                         }
                         $dataEnd = $curRow - 1;
@@ -183,7 +193,7 @@ class ExportService {
                     // --- STANDARD DEPARTMENT SHEETS ---
                     $stmtDocs = $db->prepare("SELECT doctor_name FROM dpjp WHERE department_id = ? ORDER BY id ASC");
                     $stmtDocs->execute([$deptId]);
-                    $deptDoctors = $stmtDocs->fetchAll(PDO::FETCH_COLUMN);
+                    $dbDocs = $stmtDocs->fetchAll(PDO::FETCH_COLUMN);
 
                     $deptTxs = $groupedData[$deptName] ?? [];
 
@@ -195,6 +205,14 @@ class ExportService {
                             $txsByDoctor[$docName] = [];
                         }
                         $txsByDoctor[$docName][] = $t;
+                    }
+
+                    $deptDoctors = [];
+                    foreach ($dbDocs as $doc) {
+                        $deptDoctors[] = $doc;
+                        if (isset($txsByDoctor[$doc . ' (TLB)'])) {
+                            $deptDoctors[] = $doc . ' (TLB)';
+                        }
                     }
 
                     $curRow = 3;
@@ -232,6 +250,11 @@ class ExportService {
 
                                 $sheet->getStyle("A{$dRow}:B{$dRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                                 $sheet->getStyle("E{$dRow}:F{$dRow}")->getNumberFormat()->setFormatCode($currencyFormat);
+                                
+                                if (!empty($t['is_tlb'])) {
+                                    $sheet->getStyle("A{$dRow}:F{$dRow}")->getFill()->applyFromArray($redFill);
+                                }
+                                
                                 $dRow++;
                             }
                             $dataEnd = $dRow - 1;
@@ -311,10 +334,20 @@ class ExportService {
 
                 if ($isRkg) {
                     $docList = ['DPJP RKG'];
+                    if (isset($doctorTotalCellMap['DPJP RKG (TLB)'])) {
+                        $docList[] = 'DPJP RKG (TLB)';
+                    }
                 } else {
                     $stmtDocs = $db->prepare("SELECT doctor_name FROM dpjp WHERE department_id = ? ORDER BY id ASC");
                     $stmtDocs->execute([$deptId]);
-                    $docList = $stmtDocs->fetchAll(PDO::FETCH_COLUMN);
+                    $dbDocs = $stmtDocs->fetchAll(PDO::FETCH_COLUMN);
+                    $docList = [];
+                    foreach ($dbDocs as $doc) {
+                        $docList[] = $doc;
+                        if (isset($doctorTotalCellMap[$doc . ' (TLB)'])) {
+                            $docList[] = $doc . ' (TLB)';
+                        }
+                    }
                 }
 
                 $dataStart = $hRow + 1;
@@ -341,6 +374,11 @@ class ExportService {
 
                     $rekapSheet->getStyle("A{$curD}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                     $rekapSheet->getStyle("C{$curD}:D{$curD}")->getNumberFormat()->setFormatCode($currencyFormat);
+                    
+                    if (strpos($docName, '(TLB)') !== false) {
+                        $rekapSheet->getStyle("A{$curD}:D{$curD}")->getFill()->applyFromArray($redFill);
+                    }
+                    
                     $curD++;
                 }
 
